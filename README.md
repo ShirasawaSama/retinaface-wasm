@@ -40,6 +40,16 @@ console.log(result)
 retinaface.close()
 ```
 
+## Brotli Compress WASM 
+
+```bash
+node -e "fs.writeFileSync('retinaface-basic.wasm.br', zlib.brotliCompressSync(fs.readFileSync('retinaface-basic.wasm')))"
+```
+
+## Examples
+
+[Examples](examples)
+
 ## Author
 
 Shirasawa
