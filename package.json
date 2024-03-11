@@ -1,0 +1,49 @@
+{
+  "name": "retinaface",
+  "version": "0.0.6",
+  "description": "Running the Retinaface face recognition algorithm in browser.",
+  "main": "dist/index.js",
+  "type": "module",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "start": "vite",
+    "test": "eslint src --ext .ts",
+    "build": "tsc",
+    "prepare": "tsc"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShirasawaSama/retinaface-wasm.git"
+  },
+  "keywords": [
+    "retinaface",
+    "face-detection",
+    "face-recognition",
+    "face-detect",
+    "face-detector",
+    "wasm",
+    "onnx",
+    "onnxruntime",
+    "webgl",
+    "ai"
+  ],
+  "author": "Shirasawa",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ShirasawaSama/retinaface-wasm/issues"
+  },
+  "homepage": "https://github.com/ShirasawaSama/retinaface-wasm#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "eslint": "^8.57.0",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.6.2",
+    "eslint-plugin-promise": "^6.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
+  }
+}
