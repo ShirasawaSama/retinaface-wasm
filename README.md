@@ -22,7 +22,7 @@ npm install retinaface-wasm
 import Retinaface, { getWasmFile, env } from 'retinaface-wasm'
 import imagePath from './R.jpg'
 
-const wasm = await WebAssembly.instantiateStreaming(fetch('https://cdn.jsdelivr.net/npm/onnxruntime-wasm/dist/wasm/' + getWasmFile()), env)
+const wasm = await WebAssembly.instantiateStreaming(fetch('https://cdn.jsdelivr.net/npm/retinaface-wasm/wasm/' + getWasmFile()), env)
 const retinaface = new Retinaface(wasm.instance)
 
 const image = new Image()
