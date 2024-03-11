@@ -226,11 +226,11 @@ static bool init_retinaface() {
     return true;
 }
 
-static int detect_retinaface(const unsigned char* data, int img_w, int img_h, std::vector<FaceObject> &faceobjects) {
+static int detect_retinaface(
+        const unsigned char* data, int img_w, int img_h, std::vector<FaceObject> &faceobjects,
+        const float prob_threshold = 0.75f, const float nms_threshold = 0.4f
+) {
     if (!init_retinaface()) return -1;
-
-    const float prob_threshold = 0.75f;
-    const float nms_threshold = 0.4f;
 
     ncnn::Mat in = ncnn::Mat::from_pixels(data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h);
 
@@ -351,9 +351,12 @@ EMSCRIPTEN_KEEPALIVE void _free(void* ptr) {
     free(ptr);
 }
 
-EMSCRIPTEN_KEEPALIVE void* detect(const unsigned char* data, int img_w, int img_h) {
+EMSCRIPTEN_KEEPALIVE void* detect(
+        const unsigned char* data, int img_w, int img_h,
+        const float prob_threshold = 0.75f, const float nms_threshold = 0.4f
+) {
     std::vector<FaceObject> faceobjects;
-    auto res = detect_retinaface(data, img_w, img_h, faceobjects);
+    auto res = detect_retinaface(data, img_w, img_h, faceobjects, prob_threshold, nms_threshold);
     if (res) return nullptr;
 
     auto size = (int)faceobjects.size();
@@ -372,5 +375,12 @@ EMSCRIPTEN_KEEPALIVE void* detect(const unsigned char* data, int img_w, int img_
         resMem += 4 + 5 * 2 + 1;
     }
     return mem;
+}
+
+EMSCRIPTEN_KEEPALIVE void destroy() {
+    if (retinaface) {
+        delete retinaface;
+        retinaface = nullptr;
+    }
 }
 }

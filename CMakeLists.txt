@@ -6,7 +6,10 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/emsdk/upstream/emscripten/
 project(retinaface_wasm)
 
 set(CMAKE_CXX_STANDARD 20)
-set(WASM_FEATURE "simd")
+
+if (NOT WASM_FEATURE)
+    set(WASM_FEATURE "basic")
+endif ()
 
 set(ncnn_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ncnn-20240102-webassembly/${WASM_FEATURE}/lib/cmake/ncnn")
 find_package(ncnn REQUIRED)

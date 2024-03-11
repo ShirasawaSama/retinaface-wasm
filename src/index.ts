@@ -1,140 +1,104 @@
-// import './cmake-build-release/retinaface-simd.js'
-import wasm from './cmake-build-release/retinaface-simd.wasm?init'
-import imgPath from './iyyi.png'
-
-// const memory = new WebAssembly.Memory({ initial: 256, maximum: 256 * 1024 / 64 })
-// let memoryPtr = 0
-const instance = await wasm({
-    wasi_snapshot_preview1: {
-        proc_exit (code) {
-            console.log('proc_exit', code)
-        },
-        fd_write (fd, iovs, iovs_len, nwritten) {
-            // implement your own fd_write
-            const view = new DataView(instance.exports.memory.buffer)
-            const buffers = []
-            for (let i = 0; i < iovs_len; i++) {
-                const ptr = view.getUint32(iovs + i * 8, true)
-                const len = view.getUint32(iovs + i * 8 + 4, true)
-                buffers.push(new Uint8Array(instance.exports.memory.buffer, ptr, len))
-            }
-            const decoder = new TextDecoder()
-            const str = buffers.map(b => decoder.decode(b)).join('')
-            console.log(str)
-            view.setUint32(nwritten, str.length, true)
-            return 0
-        },
-        fd_close (fd) {
-            console.log('fd_close', fd)
-        },
-        fd_seek (fd, offset, whence, newoffset) {
-            console.log('fd_seek', fd, offset, whence, newoffset)
-        },
-    }
-})
-
-const obj = instance.exports
-const memory = obj.memory
-
-
-// -------
-
-// const Module = window.Module = { }
-// var yolov5wasm = 'cmake-build-release/retinaface-basic.wasm'
-// var yolov5js = 'cmake-build-release/retinaface-basic.js'
-//
-// await fetch(yolov5wasm)
-//     .then(response => response.arrayBuffer())
-//     .then(buffer => {
-//         Module.wasmBinary = buffer;
-//         var script = document.createElement('script');
-//         script.src = yolov5js;
-//         document.body.appendChild(script);
-//         return new Promise((resolve, reject) => {
-//             script.onload = resolve;
-//             script.onerror = reject;
-//         })
-//     });
-//
-// const obj = Module
-// -------
-
-
-const canvas = document.getElementById('canvas') as HTMLCanvasElement
-canvas.width = 960
-canvas.height = 960
-
-const img = new Image()
-img.src = imgPath
-await new Promise((resolve, reject) => {
-    img.onload = resolve
-    img.onerror = reject
-})
-
-const ctx = canvas.getContext('2d')
-const scale = Math.min(canvas.width / img.width, canvas.height / img.height)
-ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale)
-
-const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-console.log(obj)
-// const data = imageData.data
-const dataPtr = obj._malloc(canvas.width * canvas.height * 3)
-
-const data = new Uint8Array(canvas.width * canvas.height * 3)
-
-for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-        const i = y * canvas.height + x
-        data[i * 3] = imageData.data[i * 4]
-        data[i * 3 + 1] = imageData.data[i * 4 + 1]
-        data[i * 3 + 2] = imageData.data[i * 4 + 2]
-    }
+export const isSimdSupported = (): boolean => {
+  try {
+    return WebAssembly.validate(new Uint8Array([
+      0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 10, 30, 1, 28, 0, 65, 0,
+      253, 15, 253, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 253, 186, 1, 26, 11
+    ]))
+  } catch {
+    return false
+  }
 }
 
-
-// const dataHeap = new Uint8ClampedArray(obj.HEAPU8.buffer, dataPtr, data.length)
-// dataHeap.set(data)
-// console.log(obj._detect(dataPtr, canvas.width, canvas.height))
-
-
-// console.log(memory.buffer)
-const dataHeap = new Uint8ClampedArray(memory.buffer, dataPtr, data.length)
-dataHeap.set(data)
-// console.log(dataHeap)
-console.time('detect')
-const ret = obj.detect(dataPtr, canvas.width, canvas.height)
-console.timeEnd('detect')
-
-const len = new Uint32Array(memory.buffer, ret, 1)[0]
-const floats = 4 + 5 * 2 + 1
-const retMem = new Float32Array(memory.buffer, ret + 4, len * floats)
-
-const faces = []
-for (let i = 0; i < len; i++) {
-    const marklands = []
-    for (let j = 0; j < 5; j++) {
-        marklands.push([retMem[i * floats + 4 + j * 2], retMem[i * floats + 4 + j * 2 + 1]])
-    }
-    faces.push({
-        rect: [retMem[i * floats], retMem[i * floats + 1], retMem[i * floats + 2], retMem[i * floats + 3]],
-        marklands,
-        socre: retMem[i * floats + 4 + 5 * 2]
-    })
+export const env = {
+  wasi_snapshot_preview1: {
+    proc_exit () { },
+    fd_write () { return 0 },
+    fd_close () { },
+    fd_seek () { return -1 }
+  }
 }
-console.log(faces)
 
-obj._free(dataPtr)
-obj._free(ret)
+export interface FaceObject {
+  rect: [number, number, number, number]
+  marklands: [[number, number], [number, number], [number, number], [number, number], [number, number]]
+  socre: number
+}
 
-faces.forEach(face => {
-    ctx.strokeStyle = 'red'
-    ctx.strokeRect(face.rect[0], face.rect[1], face.rect[2] - face.rect[0], face.rect[3] - face.rect[1])
-    face.marklands.forEach(markland => {
-        ctx.beginPath()
-        ctx.arc(markland[0], markland[1], 2, 0, Math.PI * 2)
-        ctx.fill()
-    })
-})
+export const createCanvas = (width: number, height: number) => {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    return new OffscreenCanvas(width, height)
+  } else {
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    return canvas
+  }
+}
 
-// window.ww = instance
-// window.g=instance.exports
+export const getWasmFile = (simd = isSimdSupported()): string => `retinaface-${simd ? 'simd' : 'basic'}.wasm`
+
+export default class RetinaFace {
+  public constructor (private readonly wasm: WebAssembly.Instance) { }
+
+  public detect (imageData: ImageData, scale = 1, probThreshold = 0.75, nmsThreshold = 0.4): FaceObject[] {
+    const dataPtr = (this.wasm.exports._malloc as (size: number) => number)(imageData.width * imageData.height * 3)
+    try {
+      const data = new Uint8ClampedArray(imageData.width * imageData.height * 3)
+
+      for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+          const i = y * imageData.height + x
+          data[i * 3] = imageData.data[i * 4]
+          data[i * 3 + 1] = imageData.data[i * 4 + 1]
+          data[i * 3 + 2] = imageData.data[i * 4 + 2]
+        }
+      }
+
+      const memory = this.wasm.exports.memory as WebAssembly.Memory
+      new Uint8ClampedArray(memory.buffer, dataPtr, data.length).set(data)
+      const ret = (this.wasm.exports.detect as (ptr: number, width: number, height: number, p: number, t: number) => number)(
+        dataPtr, imageData.width, imageData.height, probThreshold, nmsThreshold
+      )
+
+      try {
+        const len = new Uint32Array(memory.buffer, ret, 1)[0]
+        if (ret > 1000) throw new Error('Invalid return value')
+        const floats = 4 + 5 * 2 + 1
+        const retMem = new Float32Array(memory.buffer, ret + 4, len * floats)
+
+        const faces: FaceObject[] = []
+        for (let i = 0; i < len; i++) {
+          const marklands: any = []
+          for (let j = 0; j < 5; j++) {
+            marklands.push([retMem[i * floats + 4 + j * 2] / scale, retMem[i * floats + 4 + j * 2 + 1] / scale])
+          }
+          faces.push({
+            rect: [retMem[i * floats] / scale, retMem[i * floats + 1] / scale, retMem[i * floats + 2] / scale, retMem[i * floats + 3] / scale],
+            marklands,
+            socre: retMem[i * floats + 4 + 5 * 2]
+          })
+        }
+        return faces
+      } finally {
+        (this.wasm.exports._free as (ptr: number) => void)(ret)
+      }
+    } finally {
+      (this.wasm.exports._free as (ptr: number) => void)(dataPtr)
+    }
+  }
+
+  public close (): void {
+    (this.wasm.exports.destory as () => void)()
+  }
+
+  public processImage (image: HTMLImageElement, rect?: { left?: number, top?: number, width?: number, height?: number }, width = 960, height = 960): [ImageData, number] {
+    const r = { left: 0, top: 0, width: image.width, height: image.height, ...rect }
+    const w = (width / image.width / 16 | 0) * 16
+    const h = (height / image.height / 16 | 0) * 16
+    const scale = Math.min(w, h)
+    const canvas = createCanvas(w, h)
+    const ctx = canvas.getContext('2d')! as CanvasRenderingContext2D
+    ctx.drawImage(image, r.left, r.top, r.width, r.height, 0, 0, w, h)
+    return [ctx.getImageData(0, 0, w, h), scale]
+  }
+}

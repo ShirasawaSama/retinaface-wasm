@@ -1,7 +1,7 @@
 {
-  "name": "retinaface",
-  "version": "0.0.6",
-  "description": "Running the Retinaface face recognition algorithm in browser.",
+  "name": "retinaface-wasm",
+  "version": "0.0.0",
+  "description": "Running the Retinaface face recognition algorithm in browser or wechat mini program.",
   "main": "dist/index.js",
   "type": "module",
   "typings": "dist/index.d.ts",
@@ -12,7 +12,8 @@
     "prepare": "tsc"
   },
   "files": [
-    "dist"
+    "dist",
+    "wasm"
   ],
   "repository": {
     "type": "git",
@@ -25,10 +26,12 @@
     "face-detect",
     "face-detector",
     "wasm",
-    "onnx",
-    "onnxruntime",
-    "webgl",
-    "ai"
+    "ai",
+    "wechat",
+    "mini-program",
+    "wechat-mini-program",
+    "ncnn",
+    "webassembly"
   ],
   "author": "Shirasawa",
   "license": "MIT",
