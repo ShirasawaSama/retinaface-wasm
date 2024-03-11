@@ -1,7 +1,7 @@
 cmake-build-debug
 cmake-build-release
 ncnn-*
-*.jpg
+/*.jpg
 node_modules
 .idea
 .DS_Store
