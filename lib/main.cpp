@@ -17,18 +17,7 @@ struct FaceObject {
 };
 
 static inline float intersection_area(const FaceObject &a, const FaceObject &b) {
-    // 没有 opencv
-    float x0 = std::max(a.rect[0], b.rect[0]);
-    float y0 = std::max(a.rect[1], b.rect[1]);
-    float x1 = std::min(a.rect[2], b.rect[2]);
-    float y1 = std::min(a.rect[3], b.rect[3]);
-
-    float w = x1 - x0;
-    float h = y1 - y0;
-    if (w < 0 || h < 0)
-        return 0.f;
-
-    return w * h;
+    return std::max(0.0f, std::min(a.rect[2], b.rect[2]) - std::max(a.rect[0], b.rect[0])) * std::max(0.0f, std::min(a.rect[3], b.rect[3]) - std::max(a.rect[1], b.rect[1]));
 }
 
 static void qsort_descent_inplace(std::vector<FaceObject> &faceobjects, int left, int right) {
@@ -87,7 +76,7 @@ static void nms_sorted_bboxes(
     for (int i = 0; i < n; i++) {
         const FaceObject &a = faceObjects[i];
 
-        int keep = 1;
+        bool keep = true;
         for (int j: picked) {
             const FaceObject &b = faceObjects[j];
 
@@ -96,7 +85,7 @@ static void nms_sorted_bboxes(
             float union_area = areas[i] + areas[j] - inter_area;
             //             float IoU = inter_area / union_area
             if (inter_area / union_area > nms_threshold)
-                keep = 0;
+                keep = false;
         }
 
         if (keep)
@@ -216,10 +205,10 @@ generate_proposals(const ncnn::Mat &anchors, float feat_stride, const ncnn::Mat 
 static bool init_retinaface() {
     if (retinaface) return true;
     ncnn::set_cpu_powersave(2);
-    ncnn::set_omp_num_threads(1);
+    ncnn::set_omp_num_threads(ncnn::get_cpu_count());
 
     retinaface = new ncnn::Net;
-    retinaface->opt.num_threads = 1;
+    retinaface->opt.num_threads = ncnn::get_cpu_count();
     if (retinaface->load_param_mem(FILES_mnet_25_params)) {
         delete retinaface;
         retinaface = nullptr;
@@ -335,8 +324,8 @@ static int detect_retinaface(const unsigned char* data, int img_w, int img_h, st
         // clip to image size
         float x0 = faceobjects[i].rect[0];
         float y0 = faceobjects[i].rect[1];
-        float x1 = x0 + faceobjects[i].rect[2];
-        float y1 = y0 + faceobjects[i].rect[3];
+        float x1 = faceobjects[i].rect[2];
+        float y1 = faceobjects[i].rect[3];
 
         x0 = std::max(std::min(x0, (float) img_w - 1), 0.f);
         y0 = std::max(std::min(y0, (float) img_h - 1), 0.f);

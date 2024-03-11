@@ -61,8 +61,8 @@ const memory = obj.memory
 
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
-canvas.width = 1024
-canvas.height = 1024
+canvas.width = 960
+canvas.height = 960
 
 const img = new Image()
 img.src = imgPath
@@ -78,13 +78,13 @@ ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale)
 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
 console.log(obj)
 // const data = imageData.data
-const dataPtr = obj._malloc(1024 * 1024 * 3)
+const dataPtr = obj._malloc(canvas.width * canvas.height * 3)
 
-const data = new Uint8Array(1024 * 1024 * 3)
+const data = new Uint8Array(canvas.width * canvas.height * 3)
 
-for (let y = 0; y < 1024; y++) {
-    for (let x = 0; x < 1024; x++) {
-        const i = y * 1024 + x
+for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+        const i = y * canvas.height + x
         data[i * 3] = imageData.data[i * 4]
         data[i * 3 + 1] = imageData.data[i * 4 + 1]
         data[i * 3 + 2] = imageData.data[i * 4 + 2]
@@ -101,7 +101,9 @@ for (let y = 0; y < 1024; y++) {
 const dataHeap = new Uint8ClampedArray(memory.buffer, dataPtr, data.length)
 dataHeap.set(data)
 // console.log(dataHeap)
+console.time('detect')
 const ret = obj.detect(dataPtr, canvas.width, canvas.height)
+console.timeEnd('detect')
 
 const len = new Uint32Array(memory.buffer, ret, 1)[0]
 const floats = 4 + 5 * 2 + 1
@@ -118,12 +120,21 @@ for (let i = 0; i < len; i++) {
         marklands,
         socre: retMem[i * floats + 4 + 5 * 2]
     })
-    console.log(retMem[i * floats + 4 + 5 * 2 + 1])
 }
 console.log(faces)
 
 obj._free(dataPtr)
 obj._free(ret)
+
+faces.forEach(face => {
+    ctx.strokeStyle = 'red'
+    ctx.strokeRect(face.rect[0], face.rect[1], face.rect[2] - face.rect[0], face.rect[3] - face.rect[1])
+    face.marklands.forEach(markland => {
+        ctx.beginPath()
+        ctx.arc(markland[0], markland[1], 2, 0, Math.PI * 2)
+        ctx.fill()
+    })
+})
 
 // window.ww = instance
 // window.g=instance.exports
