@@ -36,6 +36,8 @@ const [data, scale] = retinaface.processImage(image)
 const result = retinaface.detect(data, scale)
 
 console.log(result)
+
+retinaface.close()
 ```
 
 ## Author
