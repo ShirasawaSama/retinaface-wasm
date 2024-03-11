@@ -1,6 +1,6 @@
 // import './cmake-build-release/retinaface-simd.js'
 import wasm from './cmake-build-release/retinaface-simd.wasm?init'
-import imgPath from './R.jpg'
+import imgPath from './iyyi.png'
 
 // const memory = new WebAssembly.Memory({ initial: 256, maximum: 256 * 1024 / 64 })
 // let memoryPtr = 0

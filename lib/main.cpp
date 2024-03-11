@@ -357,9 +357,9 @@ EMSCRIPTEN_KEEPALIVE void* detect(const unsigned char* data, int img_w, int img_
     if (res) return nullptr;
 
     auto size = (int)faceobjects.size();
-    auto mem = (float*) malloc(4 * (1 + size * (4 + 5 * 2 + 1)));
-    memccpy(mem, &size, 1, 4);
-    auto resMem = mem + 1;
+    auto mem = malloc(4 * (1 + size * (4 + 5 * 2 + 1)));
+    ((unsigned int*)mem)[0] = size;
+    auto resMem = (float*)mem + 1;
     for (auto& face : faceobjects) {
         for (int j = 0; j < 4; j++) {
             resMem[j] = face.rect[j];
