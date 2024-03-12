@@ -62,7 +62,7 @@ export default class RetinaFace {
 
       try {
         const len = new Uint32Array(memory.buffer, ret, 1)[0]
-        if (ret > 1000) throw new Error('Invalid return value')
+        if (len > 1000) throw new Error('Too many faces')
         const floats = 4 + 5 * 2 + 1
         const retMem = new Float32Array(memory.buffer, ret + 4, len * floats)
 
@@ -93,14 +93,10 @@ export default class RetinaFace {
 
   public processImage (image: HTMLImageElement, rect?: { left?: number, top?: number, width?: number, height?: number }, width = 960, height = 960): [ImageData, number] {
     const r = { left: 0, top: 0, width: image.width, height: image.height, ...rect }
-    let w = width / image.width
-    let h = height / image.height
-    const scale = Math.min(w, h)
-    w = (image.width * scale / 16 | 0) * 16
-    h = (image.height * scale / 16 | 0) * 16
-    const canvas = createCanvas(w, h)
+    const scale = Math.min(width / image.width, height / image.height)
+    const canvas = createCanvas(width, height)
     const ctx = canvas.getContext('2d')! as CanvasRenderingContext2D
-    ctx.drawImage(image, r.left, r.top, r.width, r.height, 0, 0, w, h)
-    return [ctx.getImageData(0, 0, w, h), scale]
+    ctx.drawImage(image, r.left, r.top, r.width, r.height, 0, 0, r.width * scale | 0, r.height * scale | 0)
+    return [ctx.getImageData(0, 0, width, height), scale]
   }
 }

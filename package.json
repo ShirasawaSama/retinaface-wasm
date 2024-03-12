@@ -1,6 +1,6 @@
 {
   "name": "retinaface-wasm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Running the Retinaface face recognition algorithm in browser or wechat mini program.",
   "main": "dist/index.js",
   "type": "module",
