@@ -93,9 +93,11 @@ export default class RetinaFace {
 
   public processImage (image: HTMLImageElement, rect?: { left?: number, top?: number, width?: number, height?: number }, width = 960, height = 960): [ImageData, number] {
     const r = { left: 0, top: 0, width: image.width, height: image.height, ...rect }
-    const w = (width / image.width / 16 | 0) * 16
-    const h = (height / image.height / 16 | 0) * 16
+    let w = width / image.width
+    let h = height / image.height
     const scale = Math.min(w, h)
+    w = (image.width * scale / 16 | 0) * 16
+    h = (image.height * scale / 16 | 0) * 16
     const canvas = createCanvas(w, h)
     const ctx = canvas.getContext('2d')! as CanvasRenderingContext2D
     ctx.drawImage(image, r.left, r.top, r.width, r.height, 0, 0, w, h)
