@@ -71,15 +71,15 @@ Component({
         const floats = 4 + 5 * 2 + 1
         const retMem = new Float32Array(obj.memory.buffer, ret + 4, len * floats)
 
-        const faces = []
+        const faces: Array<{ rect: number[], landmarks: number[][], socre: number }> = []
         for (let i = 0; i < len; i++) {
-          const marklands = []
+          const landmarks: number[][] = []
           for (let j = 0; j < 5; j++) {
-            marklands.push([retMem[i * floats + 4 + j * 2], retMem[i * floats + 4 + j * 2 + 1]])
+            landmarks.push([retMem[i * floats + 4 + j * 2], retMem[i * floats + 4 + j * 2 + 1]])
           }
           faces.push({
             rect: [retMem[i * floats], retMem[i * floats + 1], retMem[i * floats + 2], retMem[i * floats + 3]],
-            marklands,
+            landmarks,
             socre: retMem[i * floats + 4 + 5 * 2]
           })
         }
@@ -91,7 +91,7 @@ Component({
         faces.forEach(face => {
           ctx.strokeStyle = 'red'
           ctx.strokeRect(face.rect[0], face.rect[1], face.rect[2] - face.rect[0], face.rect[3] - face.rect[1])
-          face.marklands.forEach(markland => {
+          face.landmarks.forEach(markland => {
             ctx.beginPath()
             ctx.arc(markland[0], markland[1], 2, 0, Math.PI * 2)
             ctx.fill()

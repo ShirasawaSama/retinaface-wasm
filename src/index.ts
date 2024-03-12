@@ -20,7 +20,7 @@ export const env = {
 
 export interface FaceObject {
   rect: [number, number, number, number]
-  marklands: [[number, number], [number, number], [number, number], [number, number], [number, number]]
+  landmarks: [[number, number], [number, number], [number, number], [number, number], [number, number]]
   socre: number
 }
 
@@ -68,13 +68,13 @@ export default class RetinaFace {
 
         const faces: FaceObject[] = []
         for (let i = 0; i < len; i++) {
-          const marklands: any = []
+          const landmarks: any = []
           for (let j = 0; j < 5; j++) {
-            marklands.push([retMem[i * floats + 4 + j * 2] / scale, retMem[i * floats + 4 + j * 2 + 1] / scale])
+            landmarks.push([retMem[i * floats + 4 + j * 2] / scale, retMem[i * floats + 4 + j * 2 + 1] / scale])
           }
           faces.push({
             rect: [retMem[i * floats] / scale, retMem[i * floats + 1] / scale, retMem[i * floats + 2] / scale, retMem[i * floats + 3] / scale],
-            marklands,
+            landmarks,
             socre: retMem[i * floats + 4 + 5 * 2]
           })
         }
