@@ -47,7 +47,12 @@ export const createCanvas = (width: number, height: number) => {
   }
 }
 
-export const getWasmFile = (simd = isSimdSupported(), bulkMemory = isBulkMemorySupported()): string => `retinaface-${simd ? 'simd' : bulkMemory ? 'chrome57' : 'basic'}.wasm`
+export const getWasmFile = (simd = isSimdSupported(), bulkMemory?: boolean): string => `retinaface-${
+  simd
+    ? 'simd'
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+    : (bulkMemory == null ? isBulkMemorySupported() : bulkMemory) ? 'basic' : 'chrome57'
+}.wasm`
 
 export default class RetinaFace {
   public constructor (private readonly wasm: WebAssembly.Instance) { }
