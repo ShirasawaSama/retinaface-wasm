@@ -21,4 +21,9 @@ add_executable(retinaface-${WASM_FEATURE} lib/main.cpp lib/model.h)
 set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES COMPILE_FLAGS "-Os -s INITIAL_MEMORY=256MB -s TOTAL_MEMORY=256MB -s FORCE_FILESYSTEM=1")
 set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES LINK_FLAGS    "-Os -s INITIAL_MEMORY=256MB -s TOTAL_MEMORY=256MB -s FORCE_FILESYSTEM=1 -s WASM=1 -s STANDALONE_WASM --no-entry")
 
+if (OLD_CHROME)
+    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES LINK_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s MIN_CHROME_VERSION=57")
+    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -s MIN_CHROME_VERSION=57")
+endif ()
+
 target_link_libraries(retinaface-${WASM_FEATURE} ncnn)

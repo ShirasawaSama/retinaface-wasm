@@ -9,6 +9,18 @@ export const isSimdSupported = (): boolean => {
   }
 }
 
+export const isBulkMemorySupported = (): boolean => {
+  try {
+    return WebAssembly.validate(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0, 1, 7, 1, 96,
+      3, 127, 127, 127, 0, 3, 2, 1, 0, 5, 3, 1, 0, 1, 7, 14, 2, 3, 109, 101, 109, 2, 0, 4,
+      102, 105, 108, 108, 0, 0, 10, 13, 1, 11, 0, 32, 0, 32, 1, 32, 2, 252, 11, 0, 11, 0, 10, 4,
+      110, 97, 109, 101, 2, 3, 1, 0, 0
+    ]))
+  } catch {
+    return false
+  }
+}
+
 export const env = {
   wasi_snapshot_preview1: {
     proc_exit () { },
@@ -35,7 +47,7 @@ export const createCanvas = (width: number, height: number) => {
   }
 }
 
-export const getWasmFile = (simd = isSimdSupported()): string => `retinaface-${simd ? 'simd' : 'basic'}.wasm`
+export const getWasmFile = (simd = isSimdSupported(), bulkMemory = isBulkMemorySupported()): string => `retinaface-${simd ? 'simd' : bulkMemory ? 'chrome57' : 'basic'}.wasm`
 
 export default class RetinaFace {
   public constructor (private readonly wasm: WebAssembly.Instance) { }
