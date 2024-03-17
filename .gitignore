@@ -1,5 +1,8 @@
 cmake-build-debug
 cmake-build-release
+cmake-build-release_basic
+cmake-build-release_chrome57
+cmake-build-release_simd
 ncnn-*
 /*.jpg
 /index.ts
@@ -7,3 +10,4 @@ node_modules
 .idea
 .DS_Store
 dist
+wasm

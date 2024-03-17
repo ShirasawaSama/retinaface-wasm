@@ -1,6 +1,4 @@
 #include <emscripten/emscripten.h>
-//#include <emscripten/val.h>
-//#include <emscripten/bind.h>
 #include <simpleocv.h>
 #include <net.h>
 #include <datareader.h>
@@ -382,5 +380,49 @@ EMSCRIPTEN_KEEPALIVE void destroy() {
         delete retinaface;
         retinaface = nullptr;
     }
+}
+
+EMSCRIPTEN_KEEPALIVE void* create_net(const char* params, const unsigned char* bin) {
+    auto net = new ncnn::Net;
+    net->opt.num_threads = ncnn::get_cpu_count();
+
+    if (net->load_param_mem(params)) {
+        delete net;
+        free((void*)params);
+        free((void*)bin);
+        return nullptr;
+    }
+
+    ncnn::DataReaderFromMemory rd(bin);
+
+    if (net->load_model(rd)) {
+        delete net;
+        free((void*)params);
+        free((void*)bin);
+        return nullptr;
+    }
+
+    free((void*)params);
+    free((void*)bin);
+
+    return net;
+}
+
+EMSCRIPTEN_KEEPALIVE void destroy_net(ncnn::Net* net) { delete net; }
+
+EMSCRIPTEN_KEEPALIVE bool inference(ncnn::Net* net, const unsigned char* data, int img_w, int img_h, const char* extract_name0, void* extract_ptr0, float norm_val = 1.f) {
+    auto in = ncnn::Mat::from_pixels(data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h);
+    if (norm_val != 1.f) {
+        const float mean_vals[3] = {0.f, 0.f, 0.f};
+        const float norm_vals[3] = {norm_val, norm_val, norm_val};
+        in.substract_mean_normalize(mean_vals, norm_vals);
+    }
+    ncnn::Extractor extractor = net->create_extractor();
+    extractor.set_light_mode(true);
+    if (extractor.input(net->input_indexes()[0], in)) return false;
+    ncnn::Mat out;
+    if (extractor.extract(extract_name0, out)) return false;
+    memcpy(extract_ptr0, out.data, out.total() * out.elemsize);
+    return true;
 }
 }

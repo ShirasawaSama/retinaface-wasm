@@ -48,7 +48,17 @@ node -e "fs.writeFileSync('retinaface-basic.wasm.br', zlib.brotliCompressSync(fs
 
 ## Examples
 
-[Examples](examples)
+### WeChat Mini Program
+
+[WeChat Mini Program Example](examples/wechat.ts)
+
+### 478 Landmarks
+
+[478 Landmarks Example](examples/landmarks.ts)
+
+[Landmark Indexes](https://storage.googleapis.com/mediapipe-assets/documentation/mediapipe_face_landmark_fullsize.png)
+
+![landmarks](screenshots/landmarks.jpg)
 
 ## Author
 
