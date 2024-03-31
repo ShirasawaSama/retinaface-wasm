@@ -8,7 +8,7 @@ const landmarksModel = new NcnnModel(
     wasm.instance,
     await fetch('https://cdn.jsdelivr.net/npm/retinaface-wasm/models/face_landmarker_param.txt').then(res => res.text()),
     await fetch('https://cdn.jsdelivr.net/npm/retinaface-wasm/models/face_landmarker_bin.json').then(res => res.arrayBuffer()),
-    ['input_12'],
+    ['Identity'],
     [478 * 3]
 )
 
@@ -32,7 +32,7 @@ result.forEach((face) => {
     tmpCtx.clearRect(0, 0, 256, 256)
     tmpCtx.drawImage(image, face.rect[0], face.rect[1], width, height, 0, 0, width * scale, height * scale)
     const data = landmarksModel.inference(tmpCtx.getImageData(0, 0, 256, 256), 1 / 255)[0]
-    const points = []
+    const points: Array<[number, number, number]> = []
     for (let i = 0; i < 478; i++) {
         const x = face.rect[0] + data[i * 3] / scale
         const y = face.rect[1] + data[i * 3 + 1] / scale
