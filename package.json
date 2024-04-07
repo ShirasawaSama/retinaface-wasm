@@ -1,6 +1,6 @@
 {
   "name": "retinaface-wasm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Running the Retinaface face recognition algorithm in browser or wechat mini program.",
   "main": "dist/index.js",
   "type": "module",
@@ -9,12 +9,14 @@
     "start": "vite",
     "test": "eslint src --ext .ts",
     "build": "tsc",
-    "prepare": "tsc"
+    "prepare": "tsc && npm run files-size",
+    "files-size": "node generate-files-size.js"
   },
   "files": [
     "dist",
     "wasm",
-    "models"
+    "models",
+    "files-size.json"
   ],
   "repository": {
     "type": "git",
