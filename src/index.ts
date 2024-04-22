@@ -54,32 +54,17 @@ export const getWasmFile = (simd = isSimdSupported(), bulkMemory?: boolean): str
     : (bulkMemory == null ? isBulkMemorySupported() : bulkMemory) ? 'basic' : 'chrome57'
 }.wasm`
 
-const fillImageData = (imageData: ImageData, wasm: WebAssembly.Instance, dataPtr: number) => {
-  const memory = wasm.exports.memory as WebAssembly.Memory
-  const data = new Uint8ClampedArray(memory.buffer, dataPtr, imageData.width * imageData.height * 3)
-
-  for (let y = 0; y < imageData.height; y++) {
-    for (let x = 0; x < imageData.width; x++) {
-      const i = y * imageData.height + x
-      data[i * 3] = imageData.data[i * 4]
-      data[i * 3 + 1] = imageData.data[i * 4 + 1]
-      data[i * 3 + 2] = imageData.data[i * 4 + 2]
-    }
-  }
-
-  return memory
-}
-
 export default class RetinaFace {
   public constructor (private readonly wasm: WebAssembly.Instance) { }
 
   public detect (imageData: ImageData, scale = 1, probThreshold = 0.75, nmsThreshold = 0.4): FaceObject[] {
-    const dataPtr = (this.wasm.exports._malloc as (size: number) => number)(imageData.width * imageData.height * 3)
+    const dataPtr = (this.wasm.exports._malloc as (size: number) => number)(imageData.data.length)
     try {
-      const memory = fillImageData(imageData, this.wasm, dataPtr)
+      const memory = this.wasm.exports.memory as WebAssembly.Memory
+      new Uint8ClampedArray(memory.buffer, dataPtr, imageData.data.length).set(imageData.data)
 
-      const ret = (this.wasm.exports.detect as (ptr: number, width: number, height: number, p: number, t: number) => number)(
-        dataPtr, imageData.width, imageData.height, probThreshold, nmsThreshold
+      const ret = (this.wasm.exports.detect as (ptr: number, width: number, height: number, p: number, t: number, pixelMode: number) => number)(
+        dataPtr, imageData.width, imageData.height, probThreshold, nmsThreshold, 1
       )
 
       try {
@@ -129,9 +114,9 @@ export class NcnnModel {
   private readonly extractMemory: Array<{ ptr: number, buffer: Float32Array }>
 
   public constructor (
-      private readonly wasm: WebAssembly.Instance,
-      params: string, bin: ArrayBuffer,
-      extractNames: string[], extractMemory: number[]
+    private readonly wasm: WebAssembly.Instance,
+    params: string, bin: ArrayBuffer,
+    extractNames: string[], extractMemory: number[]
   ) {
     if (!extractNames.length) throw new Error('extractNames should not be empty')
     if (extractMemory.length !== extractNames.length) throw new Error('extractMemory should have the same length as extractNames')
@@ -139,7 +124,7 @@ export class NcnnModel {
     const memory = this.wasm.exports.memory as WebAssembly.Memory
     const landmarkParamPtr = (wasm.exports._malloc as (size: number) => number)(params.length + 1)
     const landmarkParamHeap = new Uint8Array(memory.buffer, landmarkParamPtr, params.length + 1)
-    landmarkParamHeap.set(Uint8Array.from((params as string).split('').map(x => x.charCodeAt(0))))
+    landmarkParamHeap.set(Uint8Array.from(params.split('').map(x => x.charCodeAt(0))))
     landmarkParamHeap[params.length] = 0
 
     const ab = new Uint8Array(bin)
@@ -161,14 +146,15 @@ export class NcnnModel {
   }
 
   public inference (imageData: ImageData, std = 1): Float32Array[] {
-    const dataPtr = (this.wasm.exports._malloc as (size: number) => number)(imageData.width * imageData.height * 3)
+    const dataPtr = (this.wasm.exports._malloc as (size: number) => number)(imageData.data.length)
     try {
-      fillImageData(imageData, this.wasm, dataPtr)
+      const memory = this.wasm.exports.memory as WebAssembly.Memory
+      new Uint8ClampedArray(memory.buffer, dataPtr, imageData.data.length).set(imageData.data)
 
       if (!(this.wasm.exports.inference as ((
-          net: number, dataPtr: number, w: number, h: number,
-          extractNamePtr: number, extractMemoryPtr: number, std: number) => number)
-      )(this.net, dataPtr, imageData.width, imageData.height, this.extractNames[0], this.extractMemory[0].ptr, std)) {
+        net: number, dataPtr: number, w: number, h: number,
+        extractNamePtr: number, extractMemoryPtr: number, std: number, pixelMode: number) => number)
+      )(this.net, dataPtr, imageData.width, imageData.height, this.extractNames[0], this.extractMemory[0].ptr, std, 1)) {
         throw new Error('inference failed')
       }
 
@@ -178,9 +164,9 @@ export class NcnnModel {
     }
   }
 
-    public close (): void {
-      (this.wasm.exports.destory_net as (ptr: number) => void)(this.net)
-      this.extractNames.forEach(ptr => (this.wasm.exports._free as (ptr: number) => void)(ptr))
-      this.extractMemory.forEach(({ ptr }) => (this.wasm.exports._free as (ptr: number) => void)(ptr))
-    }
+  public close (): void {
+    (this.wasm.exports.destory_net as (ptr: number) => void)(this.net)
+    this.extractNames.forEach(ptr => { (this.wasm.exports._free as (ptr: number) => void)(ptr) })
+    this.extractMemory.forEach(({ ptr }) => { (this.wasm.exports._free as (ptr: number) => void)(ptr) })
+  }
 }

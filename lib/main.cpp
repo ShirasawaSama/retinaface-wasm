@@ -6,6 +6,8 @@
 
 #include "model.h"
 
+const int pixel_modes[] = { ncnn::Mat::PIXEL_RGB, ncnn::Mat::PIXEL_RGBA2RGB };
+
 ncnn::Net* retinaface = nullptr;
 
 struct FaceObject {
@@ -226,11 +228,11 @@ static bool init_retinaface() {
 
 static int detect_retinaface(
         const unsigned char* data, int img_w, int img_h, std::vector<FaceObject> &faceobjects,
-        const float prob_threshold = 0.75f, const float nms_threshold = 0.4f
+        const float prob_threshold = 0.75f, const float nms_threshold = 0.4f, const int pixel_mode = 0
 ) {
     if (!init_retinaface()) return -1;
 
-    ncnn::Mat in = ncnn::Mat::from_pixels(data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h);
+    ncnn::Mat in = ncnn::Mat::from_pixels(data, pixel_modes[pixel_mode], img_w, img_h);
 
     ncnn::Extractor ex = retinaface->create_extractor();
     ex.set_light_mode(true);
@@ -351,10 +353,10 @@ EMSCRIPTEN_KEEPALIVE void _free(void* ptr) {
 
 EMSCRIPTEN_KEEPALIVE void* detect(
         const unsigned char* data, int img_w, int img_h,
-        const float prob_threshold = 0.75f, const float nms_threshold = 0.4f
+        const float prob_threshold = 0.75f, const float nms_threshold = 0.4f, const int pixel_mode = 0
 ) {
     std::vector<FaceObject> faceobjects;
-    auto res = detect_retinaface(data, img_w, img_h, faceobjects, prob_threshold, nms_threshold);
+    auto res = detect_retinaface(data, img_w, img_h, faceobjects, prob_threshold, nms_threshold, pixel_mode);
     if (res) return nullptr;
 
     auto size = (int)faceobjects.size();
@@ -410,8 +412,12 @@ EMSCRIPTEN_KEEPALIVE void* create_net(const char* params, const unsigned char* b
 
 EMSCRIPTEN_KEEPALIVE void destroy_net(ncnn::Net* net) { delete net; }
 
-EMSCRIPTEN_KEEPALIVE bool inference(ncnn::Net* net, const unsigned char* data, int img_w, int img_h, const char* extract_name0, void* extract_ptr0, float norm_val = 1.f) {
-    auto in = ncnn::Mat::from_pixels(data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h);
+EMSCRIPTEN_KEEPALIVE bool inference(
+        ncnn::Net* net, const unsigned char* data, int img_w, int img_h,
+        const char* extract_name0, void* extract_ptr0, const float norm_val = 1.f,
+        const int pixel_mode = 0
+) {
+    auto in = ncnn::Mat::from_pixels(data, pixel_modes[pixel_mode], img_w, img_h);
     if (norm_val != 1.f) {
         const float mean_vals[3] = {0.f, 0.f, 0.f};
         const float norm_vals[3] = {norm_val, norm_val, norm_val};

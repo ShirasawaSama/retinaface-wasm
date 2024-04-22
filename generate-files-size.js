@@ -18,5 +18,5 @@ const process = async dir => {
     process('wasm'),
     process('models')
   ])
-  await fs.writeFile('files.json', JSON.stringify(json))
+  await fs.writeFile('files-size.json', JSON.stringify(json))
 })()
