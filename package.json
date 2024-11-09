@@ -1,6 +1,6 @@
 {
   "name": "retinaface-wasm",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Running the Retinaface face recognition algorithm in browser or wechat mini program.",
   "main": "dist/index.js",
   "type": "module",
@@ -11,7 +11,8 @@
     "build": "tsc",
     "copy": "(rm -r wasm || true) && mkdir wasm && cp cmake-build-release_basic/retinaface-basic.wasm cmake-build-release_chrome57/retinaface-chrome57.wasm cmake-build-release_simd/retinaface-simd.wasm wasm/",
     "prepare": "tsc && npm run copy && npm run files-size",
-    "files-size": "node generate-files-size.js"
+    "files-size": "node generate-files-size.js",
+    "generate-headers": "node generate-headers.js"
   },
   "files": [
     "dist",

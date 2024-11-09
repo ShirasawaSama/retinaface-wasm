@@ -98,7 +98,7 @@ export default class RetinaFace {
     (this.wasm.exports.destory as () => void)()
   }
 
-  public processImage (image: HTMLImageElement, rect?: { left?: number, top?: number, width?: number, height?: number }, width = 960, height = 960): [ImageData, number] {
+  public processImage (image: HTMLImageElement | HTMLCanvasElement, rect?: { left?: number, top?: number, width?: number, height?: number }, width = 960, height = 960): [ImageData, number] {
     const r = { left: 0, top: 0, width: image.width, height: image.height, ...rect }
     const scale = Math.min(width / image.width, height / image.height)
     const canvas = createCanvas(width, height)

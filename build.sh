@@ -1,6 +1,6 @@
 cd emsdk
-./emsdk install 3.1.55
-./emsdk activate 3.1.55
+./emsdk install 3.1.71
+./emsdk activate 3.1.71
 source emsdk_env.sh
 
 cd ..
