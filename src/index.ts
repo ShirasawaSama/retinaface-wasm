@@ -33,7 +33,7 @@ export const env = {
 export interface FaceObject {
   rect: [number, number, number, number]
   landmarks: [[number, number], [number, number], [number, number], [number, number], [number, number]]
-  socre: number
+  score: number
 }
 
 export const createCanvas = (width: number, height: number) => {
@@ -82,7 +82,7 @@ export default class RetinaFace {
           faces.push({
             rect: [retMem[i * floats] / scale, retMem[i * floats + 1] / scale, retMem[i * floats + 2] / scale, retMem[i * floats + 3] / scale],
             landmarks,
-            socre: retMem[i * floats + 4 + 5 * 2]
+            score: retMem[i * floats + 4 + 5 * 2]
           })
         }
         return faces

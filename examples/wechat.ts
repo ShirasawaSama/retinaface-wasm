@@ -71,7 +71,7 @@ Component({
         const floats = 4 + 5 * 2 + 1
         const retMem = new Float32Array(obj.memory.buffer, ret + 4, len * floats)
 
-        const faces: Array<{ rect: number[], landmarks: number[][], socre: number }> = []
+        const faces: Array<{ rect: number[], landmarks: number[][], score: number }> = []
         for (let i = 0; i < len; i++) {
           const landmarks: number[][] = []
           for (let j = 0; j < 5; j++) {
@@ -80,7 +80,7 @@ Component({
           faces.push({
             rect: [retMem[i * floats], retMem[i * floats + 1], retMem[i * floats + 2], retMem[i * floats + 3]],
             landmarks,
-            socre: retMem[i * floats + 4 + 5 * 2]
+            score: retMem[i * floats + 4 + 5 * 2]
           })
         }
         console.log(faces)
