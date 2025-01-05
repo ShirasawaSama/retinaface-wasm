@@ -24,14 +24,14 @@ set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 
 add_executable(retinaface-${WASM_FEATURE} lib/main.cpp lib/model.h)
 
-set(WASM_FLAGS "-Os -s INITIAL_MEMORY=256MB -s TOTAL_MEMORY=256MB -s FORCE_FILESYSTEM=1")
+set(WASM_FLAGS "-Os -s WASM=1 -s INITIAL_MEMORY=256MB -s TOTAL_MEMORY=256MB -s FORCE_FILESYSTEM=1 -s STANDALONE_WASM -s WASM_ASYNC_COMPILATION=0 --no-entry")
 
 if (WASM_FEATURE STREQUAL "chrome57")
-    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES COMPILE_FLAGS "${WASM_FLAGS} -s MIN_CHROME_VERSION=57")
-    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES LINK_FLAGS "${WASM_FLAGS} -s MIN_CHROME_VERSION=57 -s WASM=1 -s STANDALONE_WASM --no-entry")
+    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES COMPILE_FLAGS "-Os")
+    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES LINK_FLAGS "${WASM_FLAGS} -s MIN_CHROME_VERSION=57")
 else ()
-    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES COMPILE_FLAGS "${WASM_FLAGS}")
-    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES LINK_FLAGS    "${WASM_FLAGS} -s WASM=1 -s STANDALONE_WASM --no-entry")
+    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES COMPILE_FLAGS "-Os")
+    set_target_properties(retinaface-${WASM_FEATURE} PROPERTIES LINK_FLAGS    "${WASM_FLAGS}")
 endif ()
 
 target_link_libraries(retinaface-${WASM_FEATURE} ncnn)
